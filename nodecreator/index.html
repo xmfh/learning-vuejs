@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-cn">
+
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+</head>
+
+<body>
+
+	<div id="app">
+		<ul>
+			<template v-for="node in nodes">
+				<my-node :node="node"></my-node>
+			</template>
+
+		</ul>
+
+
+		<ul>
+			<li v-for="node in nodes">
+				{{node.nodeName}}
+			</li>
+		</ul>
+	</div>
+	<script type="text/x-template" id="nodelist-template">
+
+	<li>
+		<span  v-on:createchild="createchildbynode" v-on:keyup.45="insert(node)" v-on:keyup.enter="appendNode(node)" v-on:keyup="modifyNodeName($event,node)"  contenteditable="true">{{node.nodeName}}</span>
+				<ul v-if="nodes">
+					<template v-for="child in nodes">
+						<my-node :node="child"></my-node>
+						</template>
+					</ul>
+			</li>
+
+</script>
+	<script src="http://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
+	<script src="http://cdn.bootcss.com/lodash.js/4.17.2/lodash.min.js"></script>
+	<script src="https://unpkg.com/vue/dist/vue.js"></script>
+
+	<script>
+	Vue.component('my-node',{
+			template:'#nodelist-template',
+			props:{
+				node:{
+					type:Object,
+					default:function(){
+						return {id:0,nodeName:''}
+					}
+				}
+			},
+			data:function(){
+				return{
+					nodes:this.node.childrens
+				}
+			},
+			methods:{
+				modifyNodeName:function(event,node){
+					this.$set(node,'nodeName',event.target.innerText)
+					//node.nodeName =event.target.innerText;
+				},
+				insert:function(node){
+					if(!node.childrens){
+						this.$set(node,'childrens',[{nodeName:''}]);
+					}
+				},
+				appendNode:function(node){
+					//this.$emit('createchild',node);
+			
+					var array = this.$parent.$data.nodes||this.$parent.props.node.childrens;
+					var index = _.findIndex(array,node)+1;
+					array.splice(index,0,{id:0,nodeName:'新建节点'});
+					if(this.$parent.$data.nodes){
+						this.$set(this.$parent.$data,'nodes',array);
+					}else{
+						this.$set(this.props.node,'childrens',array);
+					}
+
+					return false;
+					
+
+				},
+				createchildbynode:function(node){
+					if(!this.props.node.childrens){
+						this.$set(this.props.node,'childrens',[{nodeName:'新建节点'}]);
+					}else{
+						var index =	_.findIndex(this.props.node,node);
+						var array = this.props.node.childrens||[];
+						array.splice(index,0,node);
+						this.$set(this.props.node,'childrens',array);
+					}
+
+					
+				}
+			},
+			mounted:function(){
+				$(this.$el).focus();
+				$(this.$el).find('span').get(0).focus();
+			}
+		});
+		var app = new Vue({
+			el:'#app',
+			data:{
+				nodes:[{id:1,nodeName:'走进市县',left:1,right:2},{id:2,nodeName:'新闻频道',left:3,right:4}]
+			}
+			
+		});
+		
+	</script>
+</body>
+
+</html>
